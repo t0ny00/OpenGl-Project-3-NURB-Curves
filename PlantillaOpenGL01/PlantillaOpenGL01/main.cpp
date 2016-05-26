@@ -6,6 +6,7 @@
 #include <math.h>
 #include <functional>
 #include <numeric>
+#include <string>
 
 using namespace std;
 
@@ -23,6 +24,7 @@ GLfloat knots[25] = {0,0,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,25,25,25,
 
 GLfloat t = 0;
 bool play = false;
+int selected;
 
 struct Wave
 {
@@ -98,9 +100,11 @@ void animacion(int value) {
 	GLfloat w2 = 2*PI/wave2.length;
 	GLfloat delta1 = wave1.spd*2*PI/wave1.length;
 	GLfloat delta2 = wave2.spd*2*PI/wave2.length;
-	float temp[2] = {wave1.dir_x,wave1.dir_y};
-	float temp3[2] = {wave2.dir_x,wave2.dir_y};
-
+	GLfloat length1 = sqrt(wave1.dir_x*wave1.dir_x + wave1.dir_y*wave1.dir_y);
+	GLfloat length2 = sqrt(wave2.dir_x*wave2.dir_x + wave2.dir_y*wave2.dir_y);
+	float temp[2] = {wave1.dir_x/length1,wave1.dir_y/length1};
+	float temp3[2] = {wave2.dir_x/length2,wave2.dir_y/length2};
+	printf("%f ||  %f \n",wave1.dir_x/length1,wave1.dir_y/length1);
 
 	for (int i = 0; i<21;i++){
 		for (int j = 0; j<21;j++){
@@ -118,29 +122,18 @@ void animacion(int value) {
 void init_surface() {
 
 	int x,y,z;
-	x = 10;
+	z = 10;
 	y = 0;
 	for (int i = 0; i<21;i++){
-		z = 10;
+		x = 10;
 		for (int j = 0; j<21;j++){
-			for (int k = 0; k<21;k++){
-				switch (k){
-					case 0:
-						ctrPointsNurbsSurf[i][j][k] = x;
-						break;
-					case 1:
-						ctrPointsNurbsSurf[i][j][k] = y;
-						break;
-					case 2:
-						ctrPointsNurbsSurf[i][j][k] = z;
-						break;
-				}
-			}
-			z--;
+			ctrPointsNurbsSurf[i][j][0] = x;
+			ctrPointsNurbsSurf[i][j][1] = y;
+			ctrPointsNurbsSurf[i][j][2] = z;
+			x--;
 		}
-		x--;
+		z--;
 	}
-	
 	
 }
 
@@ -163,7 +156,7 @@ void init(){
 	wave1.dir_y = -1.0;
 
 	wave2.length = 3.0;
-	wave2.ampl = 1.2;
+	wave2.ampl = 0;
 	wave2.spd = 1.0;
 	wave2.dir_x = 1.0;
 	wave2.dir_y = 1.0;
@@ -171,7 +164,7 @@ void init(){
 	theNurb = gluNewNurbsRenderer();
 	gluNurbsProperty(theNurb, GLU_SAMPLING_TOLERANCE, 15.0);
 	gluNurbsProperty(theNurb, GLU_DISPLAY_MODE, GLU_FILL);
-
+	
 	glutTimerFunc(10,animacion,1);
 
 }
@@ -191,10 +184,123 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'p':
 		play = false;
 		break;  
+	case 'a':
+		if (selected == 1) wave1.length +=0.1;
+		if (selected == 2) wave2.length +=0.1;
+		break;
+	case 'z':
+		if (selected == 1) wave1.length -=0.1;
+		if (selected == 2) wave2.length -=0.1;
+		break;
+	case 's':
+		if (selected == 1) wave1.ampl +=0.1;
+		if (selected == 2) wave2.ampl +=0.1;
+		break;
+	case 'x':
+		if (selected == 1) wave1.ampl -=0.1;
+		if (selected == 2) wave2.ampl -=0.1;
+		break;
+	case 'd':
+		if (selected == 1) wave1.spd +=0.1;
+		if (selected == 2) wave2.spd +=0.1;
+		break;
+	case 'c':
+		if (selected == 1) wave1.spd -=0.1;
+		if (selected == 2) wave2.spd -=0.1;
+		break;
+	case 'f':
+		if (selected == 1) wave1.dir_x +=0.1;
+		if (selected == 2) wave2.dir_x +=0.1;
+		break;
+	case 'v':
+		if (selected == 1) wave1.dir_x -=0.1;
+		if (selected == 2) wave2.dir_x -=0.1;
+		break;
+	case 'g':
+		if (selected == 1) wave1.dir_y +=0.1;
+		if (selected == 2) wave2.dir_y +=0.1;
+		break;
+	case 'b':
+		if (selected == 1) wave1.dir_y -=0.1;
+		if (selected == 2) wave2.dir_y -=0.1;
+		break;
+	case '1':
+		selected = 1;
+		break;
+	case '2':
+		selected = 2;
+		break;
   }
 }
 
+void printWavesData(){
+	float y = 7;
+	float x = 0;
+	float z = 11;
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+	glColor3f(0.0f, 1.0f, 0.0f);
 
+	/*---------------------Wave 1------------------------------*/
+	glRasterPos3f(x,y,z);
+	glColor3f(0.0f, 1.0f, 0.0f);
+	char text[10];
+	strcpy(text, to_string(wave1.length).c_str());
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)"Wave 1 length: ");
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)text);
+	y -= 0.5; 
+	glRasterPos3f(x,y,z);
+	strcpy(text, to_string(wave1.ampl).c_str());
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)"Wave 1 Ampl: ");
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)text);
+	y -= 0.5; 
+	glRasterPos3f(x,y,z);
+	strcpy(text, to_string(wave1.spd).c_str());
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)"Wave 1 Speed: ");
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)text);
+	y -= 0.5; 
+	glRasterPos3f(x,y,z);
+	strcpy(text, to_string(wave1.dir_x).c_str());
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)"Wave 1 x_dir: ");
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)text);
+	y -= 0.5; 
+	glRasterPos3f(x,y,z);
+	strcpy(text, to_string(wave1.dir_y).c_str());
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)"Wave 1 y_dir: ");
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)text);
+
+	/*---------------------Wave 2------------------------------*/
+	x = 0;
+	y = 6.7;
+	z = -9;
+	glRasterPos3f(x,y,z);
+	strcpy(text, to_string(wave2.length).c_str());
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)"Wave 2 length: ");
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)text);
+	y -= 0.5; 
+	glRasterPos3f(x,y,z);
+	strcpy(text, to_string(wave2.ampl).c_str());
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)"Wave 2 Ampl: ");
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)text);
+	y -= 0.5; 
+	glRasterPos3f(x,y,z);
+	strcpy(text, to_string(wave2.spd).c_str());
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)"Wave 2 Speed: ");
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)text);
+	y -= 0.5; 
+	glRasterPos3f(x,y,z);
+	strcpy(text, to_string(wave2.dir_x).c_str());
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)"Wave 2 x_dir: ");
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)text);
+	y -= 0.5; 
+	glRasterPos3f(x,y,z);
+	strcpy(text, to_string(wave2.dir_y).c_str());
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)"Wave 2 y_dir: ");
+	glutBitmapString(GLUT_BITMAP_HELVETICA_12,(unsigned char*)text);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+};
 
 void render(){
 	glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -202,7 +308,6 @@ void render(){
 
 	GLfloat zExtent, xExtent, xLocal, zLocal;
     int loopX, loopZ;
-
 	glLoadIdentity ();                       
 	gluLookAt (25.0, 12.0, 4.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 	
@@ -231,8 +336,8 @@ void render(){
 
 	
 	// Render Grid 
-	glDisable(GL_LIGHTING);
-	/*glLineWidth(1.0);
+	/*glDisable(GL_LIGHTING);
+	glLineWidth(1.0);
 	glPushMatrix();
 	glRotatef(90,1.0,0.0,0.0);
     glColor3f( 0.0, 0.7, 0.7 );
@@ -253,8 +358,8 @@ void render(){
 	}
     glEnd();
 	ejesCoordenada();
-    glPopMatrix();*/
-	glEnable(GL_LIGHTING);
+    glPopMatrix();
+	glEnable(GL_LIGHTING);*/
 	// Fin Grid
 	
 
@@ -264,6 +369,7 @@ void render(){
 	glEnable( GL_LINE_SMOOTH );	
 
 	
+
 	glPushMatrix();
 
 	gluBeginSurface(theNurb);
@@ -286,7 +392,7 @@ void render(){
 	
 	/* Muestra los puntos de control */
 	
-		/*int i,j;
+		int i,j;
 		glPointSize(5.0);
 		glDisable(GL_LIGHTING);
 		glColor3f(1.0, 1.0, 0.0);
@@ -297,14 +403,11 @@ void render(){
 			}
 		}
 		glEnd();
-		glEnable(GL_LIGHTING);*/
+		glEnable(GL_LIGHTING);
 	
-		
-
-	glDisable(GL_BLEND);
-	glDisable(GL_LINE_SMOOTH);
-
+	printWavesData();
 	glutSwapBuffers();
+	
 }
 
 
